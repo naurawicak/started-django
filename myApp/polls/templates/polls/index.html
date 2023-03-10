@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+</head>
+<body>
+
+{% if pertanyaan_terakhir_list %}
+    <ul>
+    {% for question in pertanyaan_terakhir_list %}
+    <li><a href="{% url 'polls:detail' question.id %}">{{ question.pertanyaan_text }}</a></li>
+        
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
+
+</body>
+</html>
