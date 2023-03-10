@@ -12,7 +12,8 @@ class Pertanyaan(models.Model):
         return self.pertanyaan_text
     
     def was_publish_terbaru(self):
-        return self.pub_date >= timezone.now() - datetime.timedelta(days=1)
+        now = timezone.now()
+        return now - datetime.timedelta(days=1) <= self.pub_date <= now
     
 
 class Pilih(models.Model):

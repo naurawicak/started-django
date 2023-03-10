@@ -1,27 +1,50 @@
-from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404
-from .models import Pertanyaan
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
+from django.views import generic
+from django.utils import timezone
 
-from django.template import loader
+from .models import Pilih, Pertanyaan
 # Create your views here.
 
-def index(request):
-    pertanyaan_terakhir_list = Pertanyaan.objects.order_by('-pub_date')[:5]
-    context = {
-        'pertanyaan_terakhir_list': pertanyaan_terakhir_list,
-    }
-    return render(request, 'polls/index.html', context)
+class IndexView(generic.ListView):
+    template_name = 'polls/index.html'
+    context_object_name = 'pertanyaan_terakhir_list'
+
+    def get_queryset(self):
+        return Pertanyaan.objects.filter(
+            pub_date__lte=timezone.now()
+        ).order_by('-pub_date')[:5]
 
 
-def detail(request, pertanyaan_id):
-    pertanyaan = get_object_or_404(Pertanyaan, pk=pertanyaan_id)
-    return render(request, 'polls/detail.html', {'pertanyaan': pertanyaan})
+class DetailView(generic.DetailView):
+    model = Pertanyaan
+    template_name = 'polls/detail.html'
+    def get_queryset(self):
+        """
+        Excludes any questions that aren't published yet.
+        """
+        return Pertanyaan.objects.filter(pub_date__lte=timezone.now())
 
-def hasil(request, pertanyaan_id):
-    response = "kamu mencari hasil dari pertanyaan %s."
-    return HttpResponse(response % pertanyaan_id)
+
+class HasilView(generic.DetailView):
+    model = Pertanyaan
+    template_name='polls/hasil.html'
 
 def suara(request, pertanyaan_id):
-    return HttpResponse("Kamu memilih suara dari pertanyaan %s." % pertanyaan_id)
+    pertanyaan = get_object_or_404(Pertanyaan, pk=pertanyaan_id)
+    try:
+        selected_pilih = pertanyaan.pilih_set.get(pk=request.POST['pilih'])
+    except (KeyError, Pilih.DoesNotExist):
+        return render(request, 'polls/detail.html',{
+            'pertanyaan': pertanyaan,
+            'error_message': "Kamu tidak memilih pilihan",
+        })
+    else:
+        selected_pilih.suara += 1
+        selected_pilih.save()
+        return HttpResponseRedirect(reverse('polls:hasil', args=(pertanyaan.id)))
+
+    
 
 

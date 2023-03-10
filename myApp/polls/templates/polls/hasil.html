@@ -1,0 +1,9 @@
+<h1>{{ pertanyaan.pertanyaan_text }}</h1>
+
+<ul>
+{% for pilih in pertanyaan.pilih_set.all %}
+    <li>{{ pilih.pilih_text }} -- {{ pilih.suara }} vote{{ pilih.suara|pluralize }}</li>
+{% endfor %}
+</ul>
+
+<a href="{% url 'polls:detail' pertanyaan.id %}">Vote again?</a>
